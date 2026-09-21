@@ -75,7 +75,7 @@ dependencies {
     implementation("androidx.webkit:webkit:1.11.0")
     implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
     implementation("androidx.activity:activity-ktx:1.9.1")
-    implementation("androidx.splashscreen:splashscreen:1.0.1")
+    implementation("androidx.core:core-splashscreen:1.0.1")
 
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.2.1")
