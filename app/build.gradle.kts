@@ -5,12 +5,12 @@ plugins {
 
 android {
     namespace = "com.magro.photosortai"
-    compileSdk = 34
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.magro.photosortai"
         minSdk = 24
-        targetSdk = 34
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0.0"
 
