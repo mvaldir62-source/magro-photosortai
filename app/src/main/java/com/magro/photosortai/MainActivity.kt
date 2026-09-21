@@ -71,9 +71,8 @@ class MainActivity : AppCompatActivity() {
         swipeRefresh = findViewById(R.id.swipeRefresh)
         errorView = findViewById(R.id.errorView)
 
-        swipeRefresh.setOnRefreshListener {
-            webView.reload()
-        }
+        // Disable pull-to-refresh to prevent accidental reloads
+        swipeRefresh.isEnabled = false
 
         findViewById<View>(R.id.retryButton).setOnClickListener {
             errorView.visibility = View.GONE
@@ -126,7 +125,7 @@ class MainActivity : AppCompatActivity() {
             mediaPlaybackRequiresUserGesture = false
             mixedContentMode = WebSettings.MIXED_CONTENT_NEVER_ALLOW
             cacheMode = WebSettings.LOAD_DEFAULT
-            userAgentString = "${userAgentString} MagroPhotoSortAI/1.0.0"
+            userAgentString = "${userAgentString} MagroPhotoSortAI/1.0.1"
         }
 
         webView.webViewClient = object : WebViewClient() {
@@ -138,7 +137,6 @@ class MainActivity : AppCompatActivity() {
             override fun onPageFinished(view: WebView?, url: String?) {
                 super.onPageFinished(view, url)
                 progressBar.visibility = View.GONE
-                swipeRefresh.isRefreshing = false
                 errorView.visibility = View.GONE
             }
 
@@ -150,7 +148,6 @@ class MainActivity : AppCompatActivity() {
                 super.onReceivedError(view, request, error)
                 if (request?.isForMainFrame == true) {
                     progressBar.visibility = View.GONE
-                    swipeRefresh.isRefreshing = false
                     errorView.visibility = View.VISIBLE
                 }
             }
@@ -215,27 +212,19 @@ class MainActivity : AppCompatActivity() {
 
     private fun openFileChooser(params: WebChromeClient.FileChooserParams?) {
         val intents = mutableListOf<Intent>()
-
         if (hasCameraPermission()) {
             val cameraIntent = createCameraIntent()
-            if (cameraIntent != null) {
-                intents.add(cameraIntent)
-            }
+            if (cameraIntent != null) intents.add(cameraIntent)
         } else {
             requestCameraPermission()
         }
-
         val contentIntent = Intent(Intent.ACTION_GET_CONTENT).apply {
             addCategory(Intent.CATEGORY_OPENABLE)
             type = "image/*"
             putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
         }
-
         val chooserIntent = Intent.createChooser(contentIntent, "Select photos")
-        if (intents.isNotEmpty()) {
-            chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, intents.toTypedArray())
-        }
-
+        if (intents.isNotEmpty()) chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, intents.toTypedArray())
         fileChooserLauncher.launch(chooserIntent)
     }
 
@@ -243,17 +232,9 @@ class MainActivity : AppCompatActivity() {
         return try {
             val photoFile = createImageFile()
             cameraPhotoPath = photoFile.absolutePath
-            val photoUri = FileProvider.getUriForFile(
-                this,
-                "${packageName}.fileprovider",
-                photoFile
-            )
-            Intent(MediaStore.ACTION_IMAGE_CAPTURE).apply {
-                putExtra(MediaStore.EXTRA_OUTPUT, photoUri)
-            }
-        } catch (ex: IOException) {
-            null
-        }
+            val photoUri = FileProvider.getUriForFile(this, "${packageName}.fileprovider", photoFile)
+            Intent(MediaStore.ACTION_IMAGE_CAPTURE).apply { putExtra(MediaStore.EXTRA_OUTPUT, photoUri) }
+        } catch (ex: IOException) { null }
     }
 
     @Throws(IOException::class)
@@ -264,9 +245,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun hasCameraPermission(): Boolean {
-        return ContextCompat.checkSelfPermission(
-            this, Manifest.permission.CAMERA
-        ) == PackageManager.PERMISSION_GRANTED
+        return ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
     }
 
     private fun requestCameraPermission() {
